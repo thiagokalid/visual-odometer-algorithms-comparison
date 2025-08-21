@@ -4,10 +4,13 @@ __pycache__/
 *$py.class
 
 # Data / Results
-data/
 figures/
 *.pkl
 *.m2k
+*.jpg
+*.png
+*.csv
+
 
 # C extensions
 *.so
