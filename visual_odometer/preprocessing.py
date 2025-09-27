@@ -64,18 +64,10 @@ def image_preprocessing(img, configs: dict, use_gpu = False):
         use_gpu=use_gpu
     )
 
-    if use_gpu is True:
-        img_spectrum = cp.fft.fftshift(cp.fft.fft2(img))
-        img_spectrum = apply_frequency_window(
-            img_spectrum,
-            method=configs["Frequency Window"]["method"],
-            params=configs["Frequency Window"]["params"]
-        )
-    else:
-        img_spectrum = np.fft.fftshift(np.fft.fft2(img))
-        img_spectrum = apply_frequency_window(
-            img_spectrum,
-            method=configs["Frequency Window"]["method"],
-            params=configs["Frequency Window"]["params"]
-        )
+    img_spectrum = np.fft.fftshift(np.fft.fft2(img))
+    img_spectrum = apply_frequency_window(
+        img_spectrum,
+        method=configs["Frequency Window"]["method"],
+        params=configs["Frequency Window"]["params"]
+    )
     return img_spectrum
