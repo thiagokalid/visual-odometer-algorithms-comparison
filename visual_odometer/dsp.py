@@ -24,7 +24,7 @@ def ideal_lowpass(img: NDArray, factor: float = 0.6) -> NDArray:
     Returns
     -------
     NDArray
-        A 2-D array representing the the filtered image with reduced size.
+        A 2-D array representing the filtered image with reduced size.
         
     """
     
