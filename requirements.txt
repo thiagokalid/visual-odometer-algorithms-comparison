@@ -1,0 +1,9 @@
+numpy
+matplotlib
+pandas
+tqdm
+scipy
+PyQt5
+PySide2
+ipython
+jupyter
