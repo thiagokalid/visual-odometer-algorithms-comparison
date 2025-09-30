@@ -1,114 +1,116 @@
 import numpy as np
-from numpy import ndarray
 
-from scipy.signal import convolve
+from numpy.typing import NDArray
 from scipy.sparse.linalg import svds as svds_cpu
+from ..phase_unwrap import phase_unwrap
+from ..dsp import normalized_cps
+from .svd import svd_estimate_shift
 
 
-def normalize_product(F, G):
-    Q = F * np.conj(G)
-    Q /= np.abs(Q)
-    return Q
+def apply_projection_phase_filter(CPS: NDArray[np.complex64], R: int, dx_min: float, dx_max: float, dy_min: float,
+                                  dy_max: float, keep_dim: bool = False) -> NDArray[np.complex64]:
+    """
+    Apply time-domain filtering on the cross-power spectrum between the spectra of I_beg and I_end where I_end = I_beg[y - dy, x - dx];
 
-def phase_fringe_filter(cross_power_spectrum: ndarray, window_size: tuple = (5, 5), threshold: float = 0.03) -> ndarray:
-    # Aplica o filtro de média para reduzir o ruído
-    filtered_spectrum = convolve(cross_power_spectrum, np.ones(window_size) / np.prod(window_size), mode='same')  # Alterado de 'constant' para 'same'
+    Parameters
+    ----------
+    CPS : NDArray[np.complex64]
+        A 2-D Array with complex-valued entries representing the result of cross-power spectrum operation between I_beg and I_end. The CPS zero-frequency is at the image center (it was fftshifted). 
+    R : int
+        Safe margin between maximum detectable displacement dx and dy.
+    dx_min : float
+        Minimum detectable displacement along horizontal axis.
+    dx_max : float
+        Maximum detectable displacement along horizontal axis.
+    dy_min : float
+        Minimum detectable displacement along vertical axis.
+    dy_max : float
+        Maximum detectable displacement along vertical axis.
+    keep_dim : bool, optional
+        Wheter to keep the dimensions of the original image or discard filtered values during low-pass filtering, by default False
 
-    # Calcula a diferença entre o espectro original e o filtrado
-    diff_spectrum = cross_power_spectrum - filtered_spectrum
+    Returns
+    -------
+    NDArray[np.complex64]
+        Filtered CPS.
+        
+    References
+    ----------
+    .. [1] Keller, Y., & Averbuch, A. (2007). A projection-based extension to phase correlation image alignment. Signal processing, 87(1), 124-133.
+    """
 
-    # Aplica o limiar para identificar as regiões de pico
-    peak_mask = np.abs(diff_spectrum) > threshold
-
-    # Atenua as regiões de pico no espectro original
-    phase_filtered_spectrum = cross_power_spectrum.copy()
-    phase_filtered_spectrum[peak_mask] *= 0.5  # Reduz a amplitude nas regiões de pico
-
-    return phase_filtered_spectrum
-
-
-def linear_regression(x: ndarray, y: ndarray) -> (float, float):
-    R = np.ones((x.size, 2))
-    R[:, 0] = x
-    x_sol = np.linalg.lstsq(R, y)
-    mu, c = x_sol[0]
-    return mu, c
-
-
-def phase_unwrapping(phase_vec: ndarray, factor: float = 0.7) -> ndarray:
-    phase_diff = np.diff(phase_vec)
-    corrected_difference = phase_diff - 2. * np.pi * (phase_diff > (2 * np.pi * factor)) + 2. * np.pi * (
-            phase_diff < -(2 * np.pi * factor))
-    return np.cumsum(corrected_difference)
-
-
-def svd_estimate_shift(phase_vec: ndarray, N: int, phase_windowing=None) -> float:
-
-    phase_unwrapped = np.unwrap(phase_vec)
-    r = np.arange(0, phase_unwrapped.size)
-    M = r.size // 2
-
-    if phase_windowing == "central":
-        x = r[M - 50:M + 50]
-        y = phase_unwrapped[M - 50:M + 50]
-    elif phase_windowing == "initial":
-        x = r[M - 80:M - 10]
-        y = phase_unwrapped[M - 80:M - 10]
-    else:
-        x = r
-        y = phase_unwrapped
-
-    mu, _ = linear_regression(x, y)
-
-    return mu * N / (2 * np.pi)
-
-def apply_projection_phase_filter(Cn_t, R, dx_min, dx_max, dy_min, dy_max) -> ndarray:
-    # # Top-left
-    # mask[dy_min:int(dy_max + R / 2), dx_min:int(dx_max + R / 2)] = 1.
-    #
-    # # Top-right
-    # mask[dy_min:int(dy_max + R / 2), int(Cn_t.shape[1] - dx_max - R / 2):Cn_t.shape[1] - dx_min] = 1.
-    #
-    # # Bottom-left
-    # mask[int(Cn_t.shape[0] - dy_max - R / 2):Cn_t.shape[0] - dy_min, dx_min:int(dx_max + R / 2)] = 1.
-    #
-    # # Bottom-right
-    # mask[int(Cn_t.shape[0] - dy_max - R / 2):Cn_t.shape[0] - dy_min,
-    # int(Cn_t.shape[1] - dx_max - R / 2):Cn_t.shape[1] - dx_min] = 1.
+    Cn_t = np.fft.ifft2(CPS)
     M, N = Cn_t.shape
 
     delta_x = (dx_max - dx_min) + R
     delta_y = (dy_max - dy_min) + R
 
-    lb_y, ub_y = np.clip(M//2 - delta_y//2, a_min=0, a_max=M), np.clip(M//2 + delta_y//2, a_min=0, a_max=M)
-    lb_x, ub_x = np.clip(N//2 - delta_x//2, a_min=0, a_max=N), np.clip(N//2 + delta_x//2, a_min=0, a_max=N)
+    # Create an indexing safe lower and upper bound for the low-pass filter:
+    lb_y, ub_y = np.clip(M // 2 - delta_y // 2, a_min=0, a_max=M), np.clip(M // 2 + delta_y // 2, a_min=0, a_max=M)
+    lb_x, ub_x = np.clip(N // 2 - delta_x // 2, a_min=0, a_max=N), np.clip(N // 2 + delta_x // 2, a_min=0, a_max=N)
 
-    mask = np.zeros_like(Cn_t, dtype=int)
-    mask[
-        lb_y : ub_y,
-        lb_x : ub_x
-    ] = 1
+    if keep_dim:
+        mask = np.zeros_like(Cn_t, dtype=int)
+        mask[lb_y: ub_y, lb_x: ub_x] = 1
+        return mask * Cn_t
+    else:
+        return np.fft.fftshift(np.fft.fftshift(Cn_t)[lb_y: ub_y, lb_x: ub_x])  # reduce the dimension
 
-    # return Cn_t * np.fft.fftshift(mask)
-    return np.fft.fftshift(np.fft.fftshift(Cn_t)[
-        lb_y : ub_y,
-        lb_x : ub_x
-    ])
 
-def proj_svd_method(fft_beg, fft_end, M: int, N: int, R: int=6, dx_min=0, dx_max=64, dy_min=0, dy_max=48, phase_windowing=None) -> (float, float):
+def proj_svd_method(fft_beg: NDArray[np.complex64], fft_end: NDArray[np.complex64], M: int, N: int, R: int = 6, dx_min: int=0, dx_max: int=64, dy_min: int=0, dy_max: int=48,
+                    phase_windowing: str = "", unwrap_method: str = "itoh1982") -> tuple[float, float]:
+    """
+    Estimate displacement between two spatialy shifted images, i.e.:
+    
+    I_end[y, x] = I_beg[y - dy, x - dx]
+    
+    where fft_beg = FFT(I_beg) and fft_end = FFT(I_end), by using projection-based phase correlation [1]_.
 
-    Q = normalize_product(fft_beg, fft_end)
+    Parameters
+    ----------
+    fft_beg : NDArray[np.complex64]
+        _description_
+    fft_end : NDArray[np.complex64]
+        _description_
+    M : int
+        Number of rows of the original image.
+    N : int
+        Number of columns of the original image.
+    R : int, optional
+        Margin between maximum defined displacement value (dx_max or dy_max) and maximum capable displacement value, by default 6
+    dx_min : int, optional
+        Minimum expected horizontal displacement (x-axis), by default 0
+    dx_max : int, optional
+        Maximum expected horizontal displacement (x-axis), by default 64
+    dy_min : int, optional
+        Minimum expected vertical displacement (y-axis), by default 0
+    dy_max : int, optional
+        Maximum expected vertical displacement (y-axis), by default 48
+    phase_windowing : str, optional
+        Type of window to be applied on the cross-power spectrum phase, by default ""
+    unwrap_method : str, optional
+        Phase unwrapping method, by default "itoh1982"
 
-    Cn_t = np.fft.ifft2(Q)
+    Returns
+    -------
+    tuple[float, float]
+        Horizontal and vertical (x and y) displacement values, assuming I[y, x].
+        
+    References
+    ----------
+    
+    .. [1] Keller, Y., & Averbuch, A. (2007). A projection-based extension to phase correlation image alignment. Signal processing, 87(1), 124-133.
+    """
+    
+    Q = normalized_cps(fft_beg, fft_end)
 
-    Cn_t_proj = apply_projection_phase_filter(Cn_t, R, dx_min, dx_max, dy_min, dy_max)
+    Cn_t_proj = apply_projection_phase_filter(Q, R, dx_min, dx_max, dy_min, dy_max)
 
     Q_filtered = np.fft.fft2(Cn_t_proj)
 
     qu, s, qv = svds_cpu(Q_filtered, k=1)
-    ang_qu = np.angle(qu[:, 0])
-    ang_qv = np.angle(qv[0, :])
-
+    ang_qu = phase_unwrap(np.angle(qu[:, 0]), unwrap_method)
+    ang_qv = phase_unwrap(np.angle(qv[0, :]), unwrap_method)
 
     M_ = M * Q_filtered.shape[0] / Q.shape[0]
     N_ = N * Q_filtered.shape[1] / Q.shape[1]
@@ -118,5 +120,3 @@ def proj_svd_method(fft_beg, fft_end, M: int, N: int, R: int=6, dx_min=0, dx_max
     deltay = svd_estimate_shift(ang_qu, int(N_), phase_windowing)
 
     return deltax, deltay
-
-
