@@ -78,7 +78,7 @@ trajectory_description = [
     },
     {
         "shift_x": 1000, "shift_y": 0,
-        "N": 200, "shift_noise_x": 0.5, "shift_noise_y": 0.1
+        "N": 100, "shift_noise_x": 0.5, "shift_noise_y": 0.1
      },
     {
         "shift_x": 0, "shift_y": 0,
@@ -86,7 +86,7 @@ trajectory_description = [
      },
     {
         "shift_x": 0, "shift_y": 500,
-        "N": 200, "shift_noise_x": 0.1, "shift_noise_y": 0.5
+        "N": 100, "shift_noise_x": 0.1, "shift_noise_y": 0.5
      },
     {
         "shift_x": 0, "shift_y": 0,
@@ -94,7 +94,7 @@ trajectory_description = [
      },
     {
         "shift_x": -1000, "shift_y": 0,
-        "N": 200, "shift_noise_x": 0.5, "shift_noise_y": 0.1
+        "N": 100, "shift_noise_x": 0.5, "shift_noise_y": 0.1
      },
     {
         "shift_x": 0, "shift_y": 0,
@@ -102,7 +102,7 @@ trajectory_description = [
      },
     {
         "shift_x": 0, "shift_y": -500,
-        "N": 200, "shift_noise_x": 0.1, "shift_noise_y": 0.5
+        "N": 100, "shift_noise_x": 0.1, "shift_noise_y": 0.5
      },
     {
         "shift_x": 0, "shift_y": 0,
