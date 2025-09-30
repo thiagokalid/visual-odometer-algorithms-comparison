@@ -5,18 +5,14 @@ import threading
 from .displacement_estimators import svd_method
 from .displacement_estimators import phase_correlation_method
 from .displacement_estimators import proj_svd_method
+from .displacement_estimators import phase_amplified_correlation_method
 from .preprocessing import image_preprocessing
 from .dsp import crop_two_imgs_with_displacement
-
-try:
-    import cupy as cp
-except ImportError:
-    cp = None
 
 DEFAULT_CONFIG = {
     "Displacement Estimation": {
         "method": "svd",
-        "reprocess_displacement":False,
+        "reprocess_displacement": False,
         "skip_frames": False,
         "params": {
             "skip_frames_threshold": 5,
@@ -104,7 +100,6 @@ class VisualOdometer:
         :return: x and y displacements in mm
         """
 
-
         img_x_size = img_beg.shape[1]
         img_y_size = img_end.shape[0]
 
@@ -112,8 +107,9 @@ class VisualOdometer:
         fft_end = image_preprocessing(img_end, self.configs)
         return self._estimate_displacement(fft_beg, fft_end, img_x_size, img_y_size)
 
-    def _estimate_displacement(self, fft_beg, fft_end, img_size_x = None, img_size_y = None) -> (float, float):
+    def _estimate_displacement(self, fft_beg, fft_end, img_size_x=None, img_size_y=None) -> (float, float):
         method = self.configs["Displacement Estimation"]["method"]
+        params = self.configs["Displacement Estimation"]["params"]
 
         if img_size_x is None:
             img_size_x = self.img_size[1]
@@ -124,7 +120,10 @@ class VisualOdometer:
         elif method == "phase-correlation":
             _deltax, _deltay = phase_correlation_method(fft_beg, fft_end)
         elif method == "proj-svd":
-            _deltax, _deltay = proj_svd_method(fft_beg, fft_end, img_size_x, img_size_y, dx_max=30, dy_max=30, phase_windowing="central")
+            _deltax, _deltay = proj_svd_method(fft_beg, fft_end, img_size_x, img_size_y, dx_max=30, dy_max=30,
+                                               phase_windowing="central")
+        elif method == "phase-amplified-correlation":
+            _deltax, _deltay = phase_amplified_correlation_method(fft_beg, fft_end, gain=3)
         else:
             raise NotImplementedError
 
