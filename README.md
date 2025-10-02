@@ -1,8 +1,10 @@
 # 0. Comparison between Visual Odometry algorithms.
 
+
+
 # 1. Introduction <a name="introduction"></a>
 
-A visual odometer is a system capable of estimating spatial displacement between two images. It can be associated with a sensing probe (such as an ultrasonic transducer) to aid giving spatial information during a mechanical sweep. 
+A visual odometer is a system capable of estimating spatial displacement between two images. It can be associated with a sensing probe (such as an ultrasonic transducer) to aid in giving spatial information during a mechanical sweep. 
 
 There are many types of algorithms that can estimate the displacement between two images. In this work, I'll compare some algorithms that perform this task mostly in the frequency domain, namely:
 
@@ -91,7 +93,7 @@ $$
 
 ## 2.3 Displacement estimation based on a Projection Singular Value Decomposition
 
-The inverse transform of the cross-power spectrum is an image with, theoretically, a single maximum value located at coordinates proportional to the displcament between f(x,y) and g(x,y). The idea behind the projection-svd method [3] is to define a maximum and minimum displacement values that the algorithm is capable of identify
+The inverse transform of the cross-power spectrum is an image with, theoretically, a single maximum value located at coordinates proportional to the displacement between f(x,y) and g(x,y). The idea behind the projection-SVD method [3] is to define maximum and minimum displacement values that the algorithm is capable of identifying
 
 $$
 r'(x,y) = r(x,y) |  \Delta x_{min} < x < \Delta x_{max}, \Delta y_{min} < y < \Delta y_{max}
@@ -101,13 +103,13 @@ then a forward DFT is applied to $r′(x,y)$, and the displacement is estimated 
 
 ## 2.4 Time-domain phase-amplified-correlation
 
-The classic phase-correlation algorithm is capable of estimating only integer displacement values, since it relies on image peak-detection. One way of estimating sub-pixel displacements would be, somehow, multiplying the original shift $\Delta x$ and $\Delta y$ by a gain $m$ resulting in $g'(x,y)=f(x-m\Delta x, y - m\Delta y)$, estimating the bigger shifts and, finally, dividing the bigger estimated shift by $m$ to compensate the previously applied gain. That is the idea behind phase-amplified-correlation [4]. The CPS between two images shifted by $\Delta x$ and $\Delta y$ is
+The classic phase-correlation algorithm is capable of estimating only integer displacement values, since it relies on image peak-detection. One way of estimating sub-pixel displacements would be, somehow, multiplying the original shift $\Delta x$ and $\Delta y$ by a gain $m$ resulting in $g'(x,y)=f(x-m\Delta x, y - m\Delta y)$, estimating the bigger shifts and, finally, dividing the bigger estimated shift by $m$ to compensate the previously applied gain. That is the idea behind phase-amplified correlation [4]. The CPS between two images shifted by $\Delta x$ and $\Delta y$ is
 
 $$
 CPS(u,v) = \exp(-j u\Delta x) \exp(-j v\Delta y)
 $$
 
-applying element-wise power is equivalent of applying a gain to the displacements:
+applying element-wise power is equivalent to applying a gain to the displacements:
 
 $$
 g'(x,y)=f(x-m\Delta x, y - m\Delta y) \Longleftrightarrow  CPS(u,v)^{1 + m} = (\exp(-j u\Delta x) \exp(-j v\Delta y))^{m+1}
