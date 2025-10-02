@@ -1,6 +1,10 @@
 # 0. Comparison between Visual Odometry algorithms.
 
+This repository provides a framework for implementing a **visual odometry system**. It also includes a [`benchmark suite`](visual-odometer-algorithms-comparison/scripts/benchmark.ipynb) for comparing different visual odometry algorithms.
 
+The benchmark scripts are located at:
+
+visual-odometer-algorithms-comparison/scripts/benchmark.ipynb
 
 # 1. Introduction <a name="introduction"></a>
 
