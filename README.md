@@ -42,7 +42,7 @@ $$
 which have a known inverse transform:
 
 $$
-r(x, y) = \mathcal{F}^{-1}\{ CPS(u, v) \} (x,y) = \delta(x - \Delta x, y - \Delta x)
+r(x, y) = \mathcal{F}^{-1} \{ CPS(u, v) \} (x,y) = \delta(x - \Delta x, y - \Delta x)
 $$
 
 Therefore, by spotting the location of the maximum of $r(x,y)$, we are, in fact, estimating the relative shift between $f(x,y)$ and $g(x,y)$:
