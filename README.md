@@ -2,10 +2,6 @@
 
 This repository provides a framework for implementing a **visual odometry system**. It also includes a [`benchmark suite`](visual-odometer-algorithms-comparison/scripts/benchmark.ipynb) for comparing different visual odometry algorithms.
 
-The benchmark scripts are located at:
-
-visual-odometer-algorithms-comparison/scripts/benchmark.ipynb
-
 # 1. Introduction <a name="introduction"></a>
 
 A visual odometer is a system capable of estimating spatial displacement between two images. It can be associated with a sensing probe (such as an ultrasonic transducer) to aid in giving spatial information during a mechanical sweep. 
