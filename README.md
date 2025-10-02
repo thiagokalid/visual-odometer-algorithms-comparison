@@ -1,11 +1,5 @@
 # 0. Comparison between Visual Odometry algorithms.
 
-
-## 0.1 PT-BR version:
-
-## 0.2 EN version: 
-
-
 # 1. Introduction <a name="introduction"></a>
 
 A visual odometer is a system capable of estimating spatial displacement between two images. It can be associated with a sensing probe (such as an ultrasonic transducer) to aid giving spatial information during a mechanical sweep. 
@@ -21,10 +15,10 @@ In the next section, each algorithm will be briefly explained.
 
 # 2. Modelling <a name="modelling"></a>
 
-Let $g[y, x]$ be a gray-scale image shifted version of $f[y, x]$, i.e.
+Let $g[x, y]$ be a gray-scale image shifted version of $f[x, y]$, i.e.
 
 $$
-g[y, x] = f[y - \Delta y, x - \Delta x],
+g[x, y] = f[y - \Delta x, y - \Delta y],
 $$
 
 the main goal of image registration methods, the core of a visual odometer, is to estimate the horizontal and vertical shift $\Delta x$ and $\Delta y$.
@@ -34,19 +28,19 @@ the main goal of image registration methods, the core of a visual odometer, is t
 If $G(u, v)$ and $F(u, v)$ are the spectra of $g(x, y)$ and $f(x, y)$, respectively, the cross-power spectrum between them is
 
 $$
-CPS = \frac{F \odot G^*}{F \odot G}
+CPS(u, v) = \frac{F(u, v) \odot G(u, v)^*}{F(u, v) \odot G(u, v)}
 $$
 
 where $\odot$ is the element-wise product (Hadamard product). Since $f(x,y)$ and $g(x,y)$ are related by a spatial shift, the shift property of the Fourier transform lets us rewrite the previous equation as 
 
 $$
-CPS = \frac{F \odot (F\exp(-j(u\Delta y + v\Delta x))^*}{|F \odot (F\exp(-j(u\Delta y + v\Delta x))|} = \exp(-j(u\Delta y + v\Delta x))
+CPS(u, v) = \frac{F(u, v) \odot (F(u, v)\exp(-j(u\Delta y + v\Delta x))^*}{|F(u, v) \odot (F(u, v)\exp(-j(u\Delta y + v\Delta x))|} = \exp(-j(u\Delta y + v\Delta x))
 $$
 
 which have a known inverse transform:
 
 $$
-r(x, y) = IFT(CPS) = \delta(x - \Delta x, y - \Delta x)
+r(x, y) = IFT{CPS(u, v)}(x,y) = \delta(x - \Delta x, y - \Delta x)
 $$
 
 Therefore, by spotting the location of the maximum of $r(x,y)$, we are, in fact, estimating the relative shift between $f(x,y)$ and $g(x,y)$:
@@ -60,7 +54,7 @@ $$
 If one pays attention to the cross-power spectrum result:
 
 $$
-CPS = \frac{F \odot (F\exp(-j(u\Delta y + v\Delta x))^*}{|F \odot (F\exp(-j(u\Delta y + v\Delta x))|} = \exp(-j(u\Delta y + v\Delta x))
+CPS(u, v) = \frac{F(u, v) \odot (F(u, v)\exp(-j(u\Delta y + v\Delta x))^*}{|F(u, v) \odot (F(u, v)\exp(-j(u\Delta y + v\Delta x))|} = \exp(-j(u\Delta y + v\Delta x))
 $$
 
 it is possible to split into two orthogonal functions, i.e.:
@@ -75,7 +69,7 @@ $$
 CPS_{matrix}[u, v] = \exp(-j u\Delta x) \exp(-j v\Delta y)
 $$
 
-it is a rank-one matrix. The method proposed by Hoge [2] takes advantage of this property by applying the rank-one truncated SVD decomposition of $CPS_{matrix}[u, v]$ which yields
+one can easily conclude that $CPS_{matrix}[u, v]$ singular. The method proposed by Hoge [2] takes advantage of this property by applying the rank-one truncated SVD decomposition of $CPS_{matrix}[u, v]$ which yields
 
 $$
 q_u = \exp(-j u \Delta x)
@@ -86,7 +80,7 @@ $$
 q_v = \exp(-j v \Delta y)
 $$
 
-and finally, by extracting the phase of $q_u$ and $q_v$ we can extract the displacement through a linear regression, since both function have linear phases
+and finally, by extracting the phase of $q_u$ and $q_v$ we can estimate the displacement through a linear regression, since both function have linear phases
 
 $$
 p_u(u) = \angle q_u =  u \Delta x
@@ -107,7 +101,7 @@ then a forward DFT is applied to $r′(x,y)$, and the displacement is estimated 
 
 ## 2.4 Time-domain phase-amplified-correlation
 
-The classic phase-correlation algorithm is capable of estimating only integer displacement values, since it relies on image peak-detection. One way of estimating sub-pixel displacements would be, somehow, multiplying the original shift $\Delta x$ and $\Delta y$ by a gain $m$, estimating the bigger shifts and, finally, dividing the bigger estimated shift by $m$ to compensate the previously applied gain. That is the idea behind phase-amplified-correlation [4]. The CPS between two images shifted by $\Delta x$ and $\Delta y$ is
+The classic phase-correlation algorithm is capable of estimating only integer displacement values, since it relies on image peak-detection. One way of estimating sub-pixel displacements would be, somehow, multiplying the original shift $\Delta x$ and $\Delta y$ by a gain $m$ resulting in $g'(x,y)=f(x-m\Delta x, y - m\Delta y)$, estimating the bigger shifts and, finally, dividing the bigger estimated shift by $m$ to compensate the previously applied gain. That is the idea behind phase-amplified-correlation [4]. The CPS between two images shifted by $\Delta x$ and $\Delta y$ is
 
 $$
 CPS(u,v) = \exp(-j u\Delta x) \exp(-j v\Delta y)
@@ -116,7 +110,7 @@ $$
 applying element-wise power is equivalent of applying a gain to the displacements:
 
 $$
-CPS(u,v)^{1 + m} = (\exp(-j u\Delta x) \exp(-j v\Delta y))^{m+1}= \exp(-j m u\Delta x) \exp(-j m v\Delta y)
+g'(x,y)=f(x-m\Delta x, y - m\Delta y) \Longleftrightarrow  CPS(u,v)^{1 + m} = (\exp(-j u\Delta x) \exp(-j v\Delta y))^{m+1}
 $$
 
 finally, the displacements with gain could be estimated through
