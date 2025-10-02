@@ -118,7 +118,7 @@ $$
 finally, the displacements with gain could be estimated through
 
 $$
-r'(x, y) = \mathcal{F}^{-1} [ CPS(u,v)^{1 + m} ](x,y) = \delta(x - (1 + m)\Delta x, y - (1 + m)\Delta y)
+r'(x, y) = \mathcal{F}^{-1} \[ CPS(u,v)^{1 + m} \](x,y) = \delta(x - (1 + m)\Delta x, y - (1 + m)\Delta y)
 $$
 
 then
