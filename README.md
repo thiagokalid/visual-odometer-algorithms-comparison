@@ -1,6 +1,6 @@
 # 0. Comparison between Visual Odometry algorithms.
 
-This repository provides a framework for implementing a **visual odometry system**. It also includes a [`benchmark suite`](scripts/benchmark.ipynb) for comparing different image registration algorithms.
+This repository provides a framework for implementing a **visual odometry system**. It also includes a [`benchmark suite`](benchmarks/benchmark.ipynb) for comparing different image registration algorithms.
 
 # 1. Introduction <a name="introduction"></a>
 

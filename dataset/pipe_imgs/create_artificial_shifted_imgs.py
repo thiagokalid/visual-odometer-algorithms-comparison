@@ -64,15 +64,7 @@ def apply_full_blur(img, blur_kernel=(7, 7)):
 
 
 # Exemplo de uso:
-
-DATA_ROOT = "../data/pipe_imgs/"
-if not os.path.exists(DATA_ROOT):
-    os.makedirs(DATA_ROOT)
-    print(f"Directory created: {DATA_ROOT}")
-else:
-    print(f"Directory already exists: {DATA_ROOT}")
-
-base_img = cv2.cvtColor(cv2.imread("../data/PIPE_IMG.jpg"), cv2.COLOR_BGR2GRAY)
+base_img = cv2.cvtColor(cv2.imread("PIPE_IMG.jpg"), cv2.COLOR_BGR2GRAY)
 
 np.random.seed(42)
 img_size = (480, 640)
@@ -172,14 +164,14 @@ for description in trajectory_description:
         data['delta_y'].append(rand_delta_y / 2)
         data['img'].append(downsampled_img)
 
-        cv2.imwrite(DATA_ROOT + f"img_{curr_iter:05d}.png", downsampled_img)
+        cv2.imwrite(f"img_{curr_iter:05d}.png", downsampled_img)
         curr_iter += 1
         print(f"Progress {curr_iter} / {total_iter} ({curr_iter / total_iter:.2%})", end='\r')
 
 x, z = np.array(x), np.array(z)
 
 df = pd.DataFrame(data)
-df.to_pickle(DATA_ROOT + "../" + "artificial_dataset.pkl")
+df.to_pickle("artificial_dataset.pkl")
 
 plt.figure()
 plt.plot(x, z, 'o')
